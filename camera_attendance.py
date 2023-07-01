@@ -12,8 +12,8 @@ from align_trans import get_reference_facial_points, warp_and_crop_face
 import time
 import logging
 import matplotlib.pyplot as plt
-logging.getLogger().handlers = []
-
+import warnings
+warnings.filterwarnings('ignore')
 class FaceRecognition:
    """
    A class for performing face recognition tasks using a pre-trained model.
@@ -97,7 +97,7 @@ class FaceRecognition:
       logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
       # Create a file handler and set the logging level
-      file_handler = logging.FileHandler("face_recognition.log")
+      file_handler = logging.FileHandler("face_recognition.log", mode='w')
       file_handler.setLevel(logging.INFO)
 
       # Create a formatter and add it to the file handler
