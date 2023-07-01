@@ -68,5 +68,3 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 Contributions to this project are welcome. If you find any issues or have suggestions for improvement, please open an issue or submit a pull request.
 
 ```
-
-You can customize this template by adding more details specific to your project, such as installation instructions, usage examples, and relevant acknowledgments.
