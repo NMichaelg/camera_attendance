@@ -17,7 +17,7 @@ Face Recognition is a Python library that provides functionalities for performin
 
 ```
 
-git clone https://github.com/your-username/face-recognition.git
+git clone https://github.com/LeTriet17/camera_attendance.git
 
 ```
 
