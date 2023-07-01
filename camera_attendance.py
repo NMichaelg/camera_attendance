@@ -15,7 +15,74 @@ import matplotlib.pyplot as plt
 logging.getLogger().handlers = []
 
 class FaceRecognition:
+   """
+   A class for performing face recognition tasks using a pre-trained model.
+
+   Attributes:
+   ----------
+   host : str
+      The host address of the database.
+   database : str
+      The name of the database.
+   user : str
+      The username for connecting to the database.
+   password : str
+      The password for connecting to the database.
+   conn : None or connection object
+      The connection object for the database.
+   cursor : None or cursor object
+      The cursor object for executing queries.
+   model : None or model object
+      The pre-trained face recognition model.
+   index : None or index object
+      The Faiss index for storing face embeddings.
+   mtcnn : None or MTCNN object
+      The MTCNN face detection model.
+
+   Methods:
+   -------
+   __init__(host, database, user, password)
+      Initializes the FaceRecognition object with the specified database connection details.
+   connect_to_database()
+      Connects to the PostgreSQL database.
+   close_database_connection()
+      Closes the database connection.
+   load_facenet_model()
+      Loads the FaceNet model for face embedding extraction.
+   load_mtcnn_model()
+      Loads the MTCNN model for face detection.
+   preprocess_image(image)
+      Preprocesses the input image for face recognition.
+   detect_face(image)
+      Performs face detection using MTCNN on the input image.
+   create_embeddings_table()
+      Creates a table in the database to store face embeddings.
+   delete_all_embeddings()
+      Deletes all existing face embeddings from the database.
+   insert_embeddings_to_database(base_dir)
+      Inserts face embeddings from a directory structure into the database.
+   build_faiss_index()
+      Builds the Faiss index for fast face search.
+   insert_new_person(image_path, person_name)
+      Inserts a new person's face embedding into the database.
+   get_top_matching_people(image_path, k=5)
+      Retrieves the top-k matching people based on the input image from the database.
+   """
    def __init__(self, host, database, user, password):
+      """
+      Initializes the FaceRecognition object with the specified database connection details.
+
+      Parameters:
+      ----------
+      host : str
+         The host address of the database.
+      database : str
+         The name of the database.
+      user : str
+         The username for connecting to the database.
+      password : str
+         The password for connecting to the database.
+      """
       self.host = host
       self.database = database
       self.user = user
@@ -43,6 +110,9 @@ class FaceRecognition:
       self.logger = logging.getLogger(__name__)
       
    def connect_to_database(self):
+      """
+      Connects to the PostgreSQL database using the provided connection details.
+      """
       # Connect to PostgreSQL database
       self.logger.info("Connecting to the database...")
       self.conn = psycopg2.connect(
@@ -55,6 +125,9 @@ class FaceRecognition:
       self.logger.info("Connected to the database.")
 
    def close_database_connection(self):
+      """
+      Closes the connection to the PostgreSQL database.
+      """
       # Close the database connection
       self.logger.info("Closing the database connection...")
       # Close the database connection
@@ -63,12 +136,18 @@ class FaceRecognition:
       self.logger.info("Database connection closed.")
 
    def load_facenet_model(self):
+      """
+      Loads the pre-trained FaceNet model for face embedding extraction.
+      """
       # Load FaceNet model
       self.logger.info("Loading FaceNet model...")
       self.model = InceptionResnetV1(pretrained='vggface2').eval()
       self.logger.info("FaceNet model loaded.")
 
    def load_mtcnn_model(self):
+      """
+      Loads the MTCNN model for face detection.
+      """
       # Load MTCNN model for face detection
       self.logger.info("Loading MTCNN model...")
       self.mtcnn = MTCNN(keep_all=False, post_process=False, min_face_size=10,
@@ -76,6 +155,19 @@ class FaceRecognition:
       self.logger.info("MTCNN model loaded.")
 
    def preprocess_image(self, image):
+      """
+      Preprocesses the input image for face recognition.
+
+      Parameters:
+      ----------
+      image : ndarray
+         The input image.
+
+      Returns:
+      -------
+      preprocessed_image : tensor
+         The preprocessed image tensor.
+      """
       # Image preprocessing
       transform = transforms.Compose([
          transforms.ToPILImage(),
@@ -87,7 +179,23 @@ class FaceRecognition:
       return preprocessed_image
 
    def detect_face(self, image):
-      # Perform face detection using MTCNN
+      """
+      Performs face detection using MTCNN on the input image.
+
+      Parameters:
+      ----------
+      image : ndarray
+         The input image.
+
+      Returns:
+      -------
+      bounding_boxes : ndarray
+         The bounding boxes of detected faces.
+      landmarks : ndarray
+         The facial landmarks of detected faces.
+      aligned_faces : list
+         The aligned faces as cropped images.
+      """
       #self.logger.info("Performing face detection using MTCNN...")
       bounding_boxes, probs, landmarks = self.mtcnn.detect(image, landmarks=True)
       try:
@@ -114,7 +222,9 @@ class FaceRecognition:
          return [],[],[]
 
    def create_embeddings_table(self):
-      # Create table to store embeddings if it doesn't exist
+      """
+      Creates a table in the database to store face embeddings if it doesn't exist.
+      """
       create_table_query = """
          CREATE TABLE IF NOT EXISTS embeddings (
                id SERIAL PRIMARY KEY,
@@ -126,6 +236,9 @@ class FaceRecognition:
       self.cursor.execute(create_table_query)
       self.conn.commit()
    def delete_all_embeddings(self):
+      """
+      Deletes all existing face embeddings from the database.
+      """
       self.connect_to_database()
       # Delete all existing embeddings
       delete_query = "DELETE FROM embeddings"
@@ -133,6 +246,14 @@ class FaceRecognition:
       self.conn.commit()
         
    def insert_embeddings_to_database(self, base_dir):
+      """
+      Inserts face embeddings from a directory structure into the database.
+
+      Parameters:
+      ----------
+      base_dir : str
+         The base directory containing the images for different people.
+      """
       self.connect_to_database()
       self.create_embeddings_table()
       self.load_facenet_model()
@@ -177,6 +298,14 @@ class FaceRecognition:
       self.close_database_connection()
             
    def build_faiss_index(self):
+      """
+      Builds the Faiss index for fast face search.
+
+      Returns:
+      -------
+      person_names : list
+         The list of person names corresponding to the inserted face embeddings.
+      """
       # Retrieve person names, embeddings, and image paths from the database
       self.cursor.execute("SELECT person_name, embedding, image_path FROM embeddings")
       rows = self.cursor.fetchall()
@@ -207,6 +336,16 @@ class FaceRecognition:
 
 
    def insert_new_person(self, image_path, person_name):
+      """
+      Inserts a new person's face embedding into the database.
+
+      Parameters:
+      ----------
+      image_path : str
+         The path to the image of the new person.
+      person_name : str
+         The name of the new person.
+      """
       self.connect_to_database()
       self.load_facenet_model()
       self.load_mtcnn_model()
@@ -242,6 +381,20 @@ class FaceRecognition:
 
    
    def get_top_matching_people(self, image_path, k=5):
+      """
+      Retrieves the top-k matching people based on the input image from the database.
+
+      Parameters:
+      ----------
+      image_path : str
+         The path to the input image.
+      k : int, optional
+         The number of top matching people to retrieve (default is 5).
+
+      Returns:
+      -------
+      None
+      """
       self.connect_to_database()
       self.load_facenet_model()
       self.load_mtcnn_model()
