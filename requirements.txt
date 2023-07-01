@@ -1,0 +1,8 @@
+opencv-python
+psycopg2
+torch
+facenet-pytorch
+Pillow
+faiss-cpu
+matplotlib
+numpy
