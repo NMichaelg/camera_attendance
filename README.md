@@ -1,3 +1,5 @@
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1XRTbHHMqkDwKbePGRrFyg14HLiKNNblL?authuser=1#scrollTo=3tPQMzroRSa1)
+
 # Face Recognition
 
 Face Recognition is a Python library that provides functionalities for performing face recognition tasks using pre-trained models. It allows you to detect faces in images, extract face embeddings, store them in a database, and perform face search to identify similar faces.
