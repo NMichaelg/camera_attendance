@@ -25,7 +25,7 @@ git clone https://github.com/LeTriet17/camera_attendance.git
 
 ```
 
-cd face-recognition
+cd camera_attendance
 
 ```
 
