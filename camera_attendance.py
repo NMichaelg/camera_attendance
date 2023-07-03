@@ -241,7 +241,7 @@ class FaceRecognition:
       """
       self.connect_to_database()
       # Delete all existing embeddings
-      delete_query = "DELETE FROM embeddings"
+      delete_query = "DELETE FROM embeddings IF EXISTS embeddings"
       self.cursor.execute(delete_query)
       self.conn.commit()
         
